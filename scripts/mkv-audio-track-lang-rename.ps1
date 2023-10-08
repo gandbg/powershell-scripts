@@ -3,7 +3,8 @@ param (
 	[switch]$TestRun
 )
 
-#Function to map BCP 47 language codes to English names
+#Function to convert language codes to English names
+#Matroska v4 uses IETF codes supported by Powershell, but for Matroska v3 (or prior) a manual mapping is needed
 #Returns $null if the code is not mapped
 function Convert-LanguageCode {
 	param (
@@ -13,10 +14,12 @@ function Convert-LanguageCode {
 
 	if($LanguageCodeIetf -ne ''){
 		$LanguageName = [System.Globalization.CultureInfo]::GetCultureInfoByIetfLanguageTag($LanguageCodeIetf).EnglishName
+
+		#If the code is not recognized the output is "Unkown Language ({the lanugage code})"
 		if($LanguageName -match "\(\w\w\)"){
 			return $null
 		} else {
-			return $LanguageCode
+			return $LanguageName
 		}
 	}
 
@@ -24,6 +27,22 @@ function Convert-LanguageCode {
 		eng {"English"}
 		ger {"German"}
 		ita {"Italian"}
+		cze {"Czech"}
+		dan {"Danish"}
+		spa {"Spanish"}
+		fin {"Finnish"}
+		fre {"French"}
+		hin {"Hindi"}
+		hun {"Hungarian"}
+		kor {"Korean"}
+		nob {"Norwegian Bokmål"}
+		dut {"Dutch"}
+		pol {"Polish"}
+		por {"Portuguese"}
+		rus {"Russian"}
+		swe {"Swedish"}
+		tha {"Thai"}
+		tur {"Turkish"}
 		Default {$null}
 	}
 }
@@ -39,19 +58,29 @@ function Invoke-TrackRenaming {
 
 	#Process each track
 	foreach($Track in $Tracks){
-		$Track.language
 		#Get track language
-		$TrackLanguage = Convert-LanguageCode -LanguageCode $Track.properties.language -LanguageCodeIetf $Track.properties.language_ietf
+		$TrackTitle = Convert-LanguageCode -LanguageCode $Track.properties.language -LanguageCodeIetf $Track.properties.language_ietf
+
+		# If the track name is 'und' (Undefined) use format: Codec / Channel count / Sampling frequency
+		if(($Track.properties.language -eq 'und') -and ($Track.properties.language_ietf -eq 'und')){
+			$TrackTitle = "$($Track.codec) / $($Track.properties.audio_channels) Channel(s) / $($Track.properties.audio_sampling_frequency) Hz"
+		}
 
 		#Actually modify the file only if the language code was converted and the run is not a test
-		if (($null -ne $TrackLanguage) -and ($TestRun -eq $false)) {
-			Write-Error "Edit logic"
+		if (($null -ne $TrackTitle) -and ($TestRun -eq $false)) {
+			$TrackId = $Track.id + 1
+			mkvpropedit $WorkingFile --edit "track:$TrackId" --set "name=$TrackTitle" --quiet
+
 		} elseif ($TestRun -eq $true) {
-			Write-Host "File: $WorkingFile `n>> Track: $($Track.id) `n>> Language: $($Track.properties.language) converted to $TrackLanguage"
+			Write-Host "File: $WorkingFile"
+			Write-Host ">> Track: $($Track.id)"
+			Write-Host ">> Language: $($Track.properties.language) converted to $TrackTitle"
 		} else {
-			Write-Error "Not supported"
+			Write-Error "Language code not mapped"
 		}
 	}
+
+	Write-Host ">> Renamed audio tracks of $WorkingFile" -ForegroundColor Green
 }
 
 # Check if provided path is a directory or a file
