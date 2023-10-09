@@ -24,22 +24,22 @@ function Convert-LanguageCode {
 	}
 
 	switch ($LanguageCode) {
-		eng {"English"}
-		ger {"German"}
-		ita {"Italian"}
 		cze {"Czech"}
 		dan {"Danish"}
-		spa {"Spanish"}
+		dut {"Dutch"}
+		eng {"English"}
 		fin {"Finnish"}
 		fre {"French"}
+		ger {"German"}
 		hin {"Hindi"}
 		hun {"Hungarian"}
+		ita {"Italian"}
 		kor {"Korean"}
 		nob {"Norwegian Bokmål"}
-		dut {"Dutch"}
 		pol {"Polish"}
 		por {"Portuguese"}
 		rus {"Russian"}
+		spa {"Spanish"}
 		swe {"Swedish"}
 		tha {"Thai"}
 		tur {"Turkish"}
@@ -70,7 +70,6 @@ function Invoke-TrackRenaming {
 		if (($null -ne $TrackTitle) -and ($TestRun -eq $false)) {
 			$TrackId = $Track.id + 1
 			mkvpropedit $WorkingFile --edit "track:$TrackId" --set "name=$TrackTitle" --quiet
-
 		} elseif ($TestRun -eq $true) {
 			Write-Host "File: $WorkingFile"
 			Write-Host ">> Track: $($Track.id)"
