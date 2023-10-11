@@ -19,8 +19,6 @@ function Set-ItemDateTimeAttributes {
 	)
 
 	Set-ItemProperty -Path $Path -Name CreationTimeUtc -Value $Data.CreationTime
-
-	Set-ItemProperty -Path $Path -Name LastAccessTimeUtc -Value $Data.LastAccessTime
-
 	Set-ItemProperty -Path $Path -Name LastWriteTimeUtc -Value $Data.LastWriteTime
+	Set-ItemProperty -Path $Path -Name LastAccessTimeUtc -Value $Data.LastAccessTime
 }

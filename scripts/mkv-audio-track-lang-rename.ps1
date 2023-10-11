@@ -53,15 +53,19 @@ function Invoke-TrackRenaming {
 		[Parameter(Mandatory=$true)][string]$WorkingFile
 	)
 
-	# Get all audio tracks
+	#Import module to keep datetime attributes untoched
+	Import-Module -Name "$PSScriptRoot\..\modules\DateTimePreservation.psm1"
+
+	#Get all audio tracks
 	$Tracks = (mkvmerge --identification-format json --identify $WorkingFile | ConvertFrom-Json).tracks | Where-Object type -eq "audio"
+	$DateTime = Get-ItemDateTimeAttributes -Path $WorkingFile
 
 	#Process each track
 	foreach($Track in $Tracks){
 		#Get track language
 		$TrackTitle = Convert-LanguageCode -LanguageCode $Track.properties.language -LanguageCodeIetf $Track.properties.language_ietf
 
-		# If the track name is 'und' (Undefined) use format: Codec / Channel count / Sampling frequency
+		#If the track name is 'und' (Undefined) use format: Codec / Channel count / Sampling frequency
 		if(($Track.properties.language -eq 'und') -and ($Track.properties.language_ietf -eq 'und')){
 			$TrackTitle = "$($Track.codec) / $($Track.properties.audio_channels) Channel(s) / $($Track.properties.audio_sampling_frequency) Hz"
 		}
@@ -79,10 +83,11 @@ function Invoke-TrackRenaming {
 		}
 	}
 
+	Set-ItemDateTimeAttributes -Path $WorkingFile -Data $DateTime
 	Write-Host ">> Renamed audio tracks of $WorkingFile" -ForegroundColor Green
 }
 
-# Check if provided path is a directory or a file
+#Check if provided path is a directory or a file
 if((Get-Item -Path $WorkingPath) -Is [System.IO.DirectoryInfo]){
 	$FileArray = Get-ChildItem -Path $($WorkingPath.Trim()+'/*') -Include *.mkv
 
