@@ -17,9 +17,9 @@ Write-Info "Mapping files"
 
 Get-ChildItem -Path '.\*' -Include '*.flac' | ForEach-Object {
 	$FlacFile = $_
-	
-	if (Test-Path ([System.IO.Path]::GetFileNameWithoutExtension($FlacFile) + ".lrc") -Type Leaf) {
-		$LrcFile = Get-Item ([System.IO.Path]::GetFileNameWithoutExtension($FlacFile) + ".lrc")
+
+	if(Test-Path -LiteralPath ([System.IO.Path]::ChangeExtension($FlacFile, '.lrc')) -Type Leaf){
+		$LrcFile = Get-Item -LiteralPath ([System.IO.Path]::ChangeExtension($FlacFile, '.lrc'))
 	} else {
 		$LrcFile = $false
 	}
@@ -43,5 +43,5 @@ $FileMap | Where-Object LRC -ne $false | ForEach-Object {
 	metaflac --preserve-modtime --remove-tag=LYRICS $_.FLAC
 	metaflac --preserve-modtime "--set-tag-from-file=LYRICS=$($_.LRC)" $_.FLAC
 
-	Remove-Item -Path $_.LRC
+	Remove-Item -LiteralPath $_.LRC
 }
